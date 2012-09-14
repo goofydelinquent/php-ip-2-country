@@ -28,28 +28,26 @@ class phpIp2Country {
 	 * @param string $ip
 	 * @param ip $method
 	 */
-	function __construct($ip,$dbConfig=array()){
+	function __construct($ip,$dbCollection){
 		if(!$this->chceckIpAddr($ip)){
 			die('Bad IP address! Should be in xxx.xxx.xxx.xxx format!');
 		}else{
 			$this->ip = $ip;
 		}
 		
-		if(!is_array($dbConfig)){
-			die('Error! Database configuration not set! #1');
-		}else{
-			$this->dbConfig = $dbConfig;
-		}
-		
-		$this->dbConnect();
+		//TODO verify $dbCollection is a MongoDBCollection
+		$this->collection = $dbCollection;
 		
 		$this->ipArr = $this->getIpArr();
 		$this->ipValue = $this->getIpValue();
 		
-		$this->ipInfoArr = $this->dbGetRow($this->getIpSelectSQL());
+		$query = array( 'IP_FROM' 	=> array( '$lte' => (int)($this->ipValue) ), 
+						'IP_TO' 	=> array( '$gte' => (int)($this->ipValue) ) );
+		
+		$this->ipInfoArr = $this->collection->findOne( $query );
 		
 		if(!$this->ipInfoArr){
-			die ('Error during reciving informations about IP address!');
+			die ('Error during receiving information about IP address!');
 		}else{
 			$this->ipInfoArr['IP_STR'] = $this->ip;
 			$this->ipInfoArr['IP_VALUE'] = $this->ipValue;
@@ -59,8 +57,6 @@ class phpIp2Country {
 	}
 	
 	function __destruct(){
-		if($this->db)
-			mysql_close($this->db);
 	}
 	
 	/**
@@ -85,7 +81,7 @@ class phpIp2Country {
 	 *
 	 * @var array
 	 */
-	public $dbConfig = array();
+	public $dbCollection = NULL;
 	
 	/**
 	 * database conection object
@@ -216,79 +212,5 @@ class phpIp2Country {
 		}else{
 			return $ip;
 		}
-	}
-	
-	/**
-	 * returns SQL used to get iformation from ip2country database
-	 *
-	 * @return string
-	 */
-	private function getIpSelectSQL(){
-		if(empty($this->dbConfig['tableName'])){
-			$this->dbConfig['tableName'] = 'ip_to_country'; //setting default mysql port name
-			echo "phpPp2Country table name not selected! traying default value: '".$this->dbConfig['tableName']."'";
-		}
-		return 'SELECT * FROM '.$this->dbConfig['tableName'].' WHERE IP_FROM <= '.$this->ipValue.' AND IP_TO >= '.$this->ipValue;
-	}
-	
-	/**
-	 * connect to database
-	 * feel free to replece our function and use here Your favorite(s) database abstraction layer (ie. ADOdb)
-	 *
-	 * @return object - database conection resource
-	 */
-	private function dbConnect(){
-		if(is_array($this->dbConfig)){
-			if(empty($this->dbConfig['host'])){
-				$this->dbConfig['host'] = 'localhost'; //setting default mysql port name
-				echo "Database connection host not selected! traying default value: '".$this->dbConfig['port']."'";
-			}
-			if(intval($this->dbConfig['port']==0)){
-				$this->dbConfig['port'] = 3306; //setting default mysql port name
-				echo "Database connection port not selected! traying default value: '".$this->dbConfig['port']."'";
-			}
-			if(empty($this->dbConfig['dbUserName'])){
-				$this->dbConfig['dbUserName'] = 'ip_to_country'; //setting default mysql port name
-				echo "Database connection host not selected! traying default value: '".$this->dbConfig['dbUserName']."'";
-			}
-			if(empty($this->dbConfig['dbUserPassword'])){
-				$this->dbConfig['dbUserPassword'] = 'xxx'; //setting default mysql port name
-				echo "Database connection host not selected! traying default value: '".$this->dbConfig['dbUserPassword']."'";
-			}
-			$this->db = mysql_connect($this->dbConfig['host'].':'.$this->dbConfig['port'], $this->dbConfig['dbUserName'], $this->dbConfig['dbUserPassword']);
-			if (!$this->db) {
-			    die('Database connection error: ' . mysql_error());
-			}else{
-				if(empty($this->dbConfig['dbName'])){
-					$this->dbConfig['dbName'] = 'ip_to_country'; //setting default mysql port name
-					echo "Database connection host not selected! traying default value: '".$this->dbConfig['dbName']."'";
-				}
-				if( !mysql_select_db( $this->dbConfig['dbName'] , $this->db ) ){
-					die("Error during selecting database '".$this->dbConfig['dbName']."' : ". mysql_error());
-				}else{
-					return true;
-				}
-			}
-		}else{
-			die('Error! Database configuration not set! #2');
-		}
-	}
-	
-	/**
-	 * executes given SQL querry and returns one row
-	 * feel free to replece our function and use here Your favorite(s) database abstraction layer (ie. ADOdb)
-	 *
-	 * @param string $sql
-	 * @return array
-	 */
-	private function dbGetRow($sql){
-		$result = mysql_query($sql);
-		if($result){
-			$row = mysql_fetch_assoc($result);
-			if($row){
-				return $row;
-			}
-		}
-		die("Error during database querry:" . mysql_error());
 	}
 }

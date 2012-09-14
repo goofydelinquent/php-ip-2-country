@@ -2,19 +2,28 @@
 
 ###PHP geolocalization class with free (updated daily) IPs database
 
+( MongoDB Implementation )
+
+Setup:
+
+	In convertAndInsert.php, modify the Mongo connection to 
+	the database & collection you want the lookup to be in.
+	
+		//Connect to your Mongo database
+		$m = new Mongo();
+		$db = $m->selectDB( 'iptocountry' );  //example database
+		$collection = $db->iptocountry;		  //example collection
+
+	Run convertAndInsert.php to add the lookup data.
+
 Example code:
 
     <?
     require('phpip2country.class.php');
 
-    $dbConfigArray = array(
-        'host' => 'localhost', //example host name
-        'port' => 3306, //3306 -default mysql port number
-        'dbName' => 'ip_to_country', //example db name
-        'dbUserName' => 'ip_to_country', //example user name
-        'dbUserPassword' => 'QrDB9Y8CKMdLDH8Q', //example user password
-        'tableName' => 'ip_to_country', //example table name
-    );
+	//Connect to your Mongo Database
+	$m = new Mongo();
+	$db = $m->selectDB( 'iptocountry' );  //example database
 
     $phpIp2Country = new phpIp2Country('213.180.138.148',$dbConfigArray);
 

@@ -14,16 +14,13 @@ if(!empty($_POST['ip'])){
 	 * Newest data (SQL) avaliable on project website
 	 * @link http://code.google.com/p/php-ip-2-country/ 
 	 */
-	$dbConfigArray = array(
-		'host' => 'localhost', //example host name
-		'port' => 3306, //3306 -default mysql port number
-		'dbName' => 'ip_to_country', //example db name
-		'dbUserName' => 'ip_to_country', //example user name
-		'dbUserPassword' => 'QrDB9Y8CKMdLDH8Q', //example user password
-		'tableName' => 'ip_to_country', //example table name
-	);
+	 
+	//Connect to your Mongo Database
+	$m = new Mongo();
+	$db = $m->selectDB( 'iptocountry' );  //example database
+	$collection = $db->iptocountry;		  //example collection
 	
-	$phpIp2Country = new phpIp2Country($_POST['ip'],$dbConfigArray);
+	$phpIp2Country = new phpIp2Country($_POST['ip'], $collection);
 	
 	echo '<b>IP: </b>' . $phpIp2Country->getInfo(IP_STR);
 	echo '<br>';
@@ -43,7 +40,7 @@ if(!empty($_POST['ip'])){
 	echo '<br>';
 	echo '<b>IP range numerical: </b>' . nl2br(var_export($phpIp2Country->getInfo(IP_RANGE_NUMERICAL),true));
 	echo '<br>';
-	echo '<b>full IP informations array: </b>' . nl2br(var_export($phpIp2Country->getInfo(IP_INFO),true));
+	echo '<b>full IP information array: </b>' . nl2br(var_export($phpIp2Country->getInfo(IP_INFO),true));
 }
 ?>
 
